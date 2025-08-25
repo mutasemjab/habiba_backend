@@ -51,6 +51,7 @@ class HomeController extends Controller
     {
         $this->validate($request, [
             'min_order' => 'nullable',
+            'status' => 'nullable',
             'whatsapp_link' => 'string|nullable',
             'facebook_link' => 'string|nullable',
             'instagram_link' => 'string|nullable',
@@ -64,6 +65,7 @@ class HomeController extends Controller
         ]);
 
         $siteGeneral = SiteGneral::first() ?? new SiteGneral();
+        $siteGeneral->status = $request->status;
         $siteGeneral->min_order = $request->min_order;
         $siteGeneral->whatsapp_link = $request->whatsapp_link;
         $siteGeneral->facebook_link = $request->facebook_link;

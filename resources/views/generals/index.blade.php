@@ -33,6 +33,11 @@
                     @include('layouts.errors')
 
                     <div class="form-group">
+                        <label for="status">فتح / اغلاق المتجر</label>
+                        <input type="text" class="form-control" id="status"
+                            value="{{ $siteGenerals->status == 1 ? "ON" : "OFF" }}" readonly>
+                    </div>
+                    <div class="form-group">
                         <label for="min_order">{{ __('messages.min_order') }}</label>
                         <input type="text" class="form-control" id="min_order"
                             value="{{ $siteGenerals->min_order ?? 'N/A' }}" readonly>

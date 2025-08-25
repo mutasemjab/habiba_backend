@@ -24,6 +24,16 @@
                     @include('layouts.errors')
                     <form action="{{ route('site_generals.store', $siteGeneral->id) }}" method="POST">
                         @csrf
+
+                          <div class="form-group ">
+                            <label for="status">فتح / اغلاق المتجر</label>
+                            <select class="form-control" name="status" id="status">
+                                <option value="">{{ __('messages.select_smoke_option') }}</option>
+                                <option value="1" {{ $siteGeneral->status == 1 ? 'selected' : '' }}>{{ __('messages.smoke_yes') }}</option>
+                                <option value="2" {{ $siteGeneral->status == 2 ? 'selected' : '' }}>{{ __('messages.smoke_no') }}</option>
+                            </select>
+                        </div>
+
                         <div class="form-group">
                             <label for="min_order">{{ __('messages.min_order') }}</label>
                             <input type="text" class="form-control" name="min_order" id="min_order"
