@@ -494,5 +494,9 @@ return [
   'smoke_yes' => 'نعم',
   'smoke_no' => 'لا',
   'select_smoke_option' => 'اختر خياراً',
+  'all_categories' => 'جميع الفئات',
+  'all_subcategories' => 'جميع الفئات الفرعية',
+  'select_category' => 'اختر التصنيف',
+  'select_subcategory' => 'اختر التصنيف الفرعي',
 
 ];

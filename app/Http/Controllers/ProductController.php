@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
+use App\Models\SubCategory;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -27,34 +29,62 @@ class ProductController extends Controller
         return response()->json(['success' => true, 'message' => 'Barcode updated successfully!']);
     }
     
+
    public function index(Request $request)
-{
-    $search = $request->input('search');
-    $hasBarcode = $request->input('has_barcode');
+    {
+        $search = $request->input('search');
+        $hasBarcode = $request->input('has_barcode');
+        $categoryId = $request->input('category_id');
+        $subCategoryId = $request->input('sub_category_id');
 
-    $products = Product::withoutGlobalScope('active')
-        ->with(['category', 'sub_category', 'brand']) // Eager loading to solve N+1 problem
-        ->when($search, function ($query) use ($search) {
-            return $query->where(function ($q) use ($search) {
-                $q->where('product_name', 'LIKE', "%{$search}%")
-                  ->orWhere('barcode', 'LIKE', "%{$search}%")
-                  ->orWhere('price', 'LIKE', "%{$search}%");
-            });
-        })
-        ->when($hasBarcode !== null, function ($query) use ($hasBarcode) {
-            if ($hasBarcode == '1') {
-                return $query->whereNotNull('barcode')->where('barcode', '!=', '');
-            } else {
-                return $query->where(function($q) {
-                    $q->whereNull('barcode')->orWhere('barcode', '');
+        // Get all categories and subcategories for the filter dropdowns
+        $categories = Category::orderBy('category_name')->get();
+        $subCategories = [];
+        
+        // If a category is selected, get its subcategories
+        if ($categoryId) {
+            $subCategories = SubCategory::where('category_id', $categoryId)
+                                    ->orderBy('sub_category_name')
+                                    ->get();
+        }
+
+        $products = Product::withoutGlobalScope('active')
+            ->with(['category', 'sub_category', 'brand']) // Eager loading to solve N+1 problem
+            ->when($search, function ($query) use ($search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('product_name', 'LIKE', "%{$search}%")
+                    ->orWhere('barcode', 'LIKE', "%{$search}%")
+                    ->orWhere('price', 'LIKE', "%{$search}%");
                 });
-            }
-        })
-        ->paginate(50) // Show 50 products per page instead of all 4000
-        ->appends($request->query()); // Preserve search parameters in pagination links
+            })
+            ->when($hasBarcode !== null, function ($query) use ($hasBarcode) {
+                if ($hasBarcode == '1') {
+                    return $query->whereNotNull('barcode')->where('barcode', '!=', '');
+                } else {
+                    return $query->where(function($q) {
+                        $q->whereNull('barcode')->orWhere('barcode', '');
+                    });
+                }
+            })
+            ->when($categoryId, function ($query) use ($categoryId) {
+                return $query->where('category_id', $categoryId);
+            })
+            ->when($subCategoryId, function ($query) use ($subCategoryId) {
+                return $query->where('sub_category_id', $subCategoryId);
+            })
+            ->paginate(50) // Show 50 products per page instead of all 4000
+            ->appends($request->query()); // Preserve search parameters in pagination links
 
-    return view('products.index', compact('products', 'search', 'hasBarcode'));
-}
+        return view('products.index', compact(
+            'products', 
+            'search', 
+            'hasBarcode', 
+            'categories', 
+            'subCategories', 
+            'categoryId', 
+            'subCategoryId'
+        ));
+    }
 
     public function create()
     {

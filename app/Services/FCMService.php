@@ -14,7 +14,7 @@ class FCMService
     {
         // Set up Google Client
         $client = new Google_Client();
-        $client->setAuthConfig(public_path('js/habiba-app-a38a0e677dbb.json'));
+        $client->setAuthConfig(public_path('js/habiba-app-43465c5ecb78.json'));
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
 
         // Get an authorized Guzzle HTTP client
@@ -31,7 +31,7 @@ class FCMService
 
     private function getProjectId()
     {
-        $credentials = json_decode(file_get_contents(public_path('js/habiba-app-a38a0e677dbb.json')), true);
+        $credentials = json_decode(file_get_contents(public_path('js/habiba-app-43465c5ecb78.json')), true);
         return $credentials['project_id'];
     }
 

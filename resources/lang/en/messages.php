@@ -400,6 +400,10 @@ return [
     'smoke_yes' => 'Yes',
     'smoke_no' => 'No',
     'select_smoke_option' => 'Select an option',
+    'all_categories' => 'All Categories',
+    'all_subcategories' => 'All Subcategories',
+    'select_category' => 'Select Category',
+    'select_subcategory' => 'Select Subcategory',
     '' => '',
 
 

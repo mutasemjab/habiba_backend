@@ -8,6 +8,7 @@ use App\Models\DashboardNotification;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ProductSyncController;
 use App\Exports\ProductsExport;
+use App\Http\Controllers\ProductController;
 use Maatwebsite\Excel\Facades\Excel;
 /*
 |--------------------------------------------------------------------------
@@ -97,6 +98,7 @@ Route::group(
                 Route::post('/update/{id}', 'CategoryController@update')->name('categories.update');
                 Route::post('/delete/{id}', 'CategoryController@destroy')->name('categories.destroy');
             });
+
             Route::prefix('sub_categories')->group(function () {
                 Route::get('/index', 'SubCategoryController@index')->name('sub_categories.index');
                 Route::get('/create', 'SubCategoryController@create')->name('sub_categories.create');

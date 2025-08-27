@@ -102,28 +102,46 @@ class ProductController extends Controller
         ], 200);
     }
     
-    public function searchAndFilter(Request $request)
+   public function searchAndFilter(Request $request)
     {
-           $query = Product::with(['category', 'sub_category', 'brand']); // Eager load relationships
-    
+        $query = Product::with(['category', 'sub_category', 'brand']); // Eager load relationships
+
         // Your existing filtering logic...
         if ($request->has('sub_category_id') && !empty($request->sub_category_id)) {
             $query->where('sub_category_id', $request->sub_category_id);
         }
-    
+
+        if ($request->has('category_id') && !empty($request->category_id)) {
+            $query->where('category_id', $request->category_id);
+        }
+
         if ($request->has('search') && !empty($request->search)) {
             $query->where(function ($q) use ($request) {
                 $q->where('product_name', 'LIKE', '%' . $request->search . '%')
-                  ->orWhere('ar_product_name', 'LIKE', '%' . $request->search . '%');
+                ->orWhere('ar_product_name', 'LIKE', '%' . $request->search . '%');
             });
         }
-    
-        if ($request->has('sort') && in_array($request->sort, ['asc', 'desc'])) {
-            $query->orderBy('price', $request->sort);
+
+        // Improved sorting logic
+        $sortField = $request->get('sort_field', 'price'); // Default sort field
+        $sortDirection = $request->get('sort', 'asc'); // Default sort direction
+        
+        // Validate sort field
+        $allowedSortFields = ['price', 'product_name', 'ar_product_name', 'created_at'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'price';
         }
-    
+        
+        // Validate sort direction
+        if (!in_array($sortDirection, ['asc', 'desc'])) {
+            $sortDirection = 'asc';
+        }
+        
+        // Apply sorting
+        $query->orderBy($sortField, $sortDirection);
+
         $products = $query->get();
-    
+
         foreach ($products as $product) {
             $imageUrls = [];
             $product->category = $product->category?->category_name;
@@ -131,12 +149,12 @@ class ProductController extends Controller
             $product->brand = $product->brand?->brand_name;
             $product->product_unit = $product->product_unit;
             $product->image = url("products/images/{$product->image}");
-    
+
             foreach ($product->gallary as $imageName) {
                 $imageUrls[] = url("products/gallary/{$imageName}");
             }
             $product->gallary = $imageUrls;
-    
+
             // Check for active offer
             $activeOffer = $product->activeOffer();
             if ($activeOffer) {
@@ -150,11 +168,13 @@ class ProductController extends Controller
                 $product->discounted_price = null;
             }
         }
-    
+
         return response()->json([
             'state' => true,
             'data' => $products,
             'message' => 'تم تحميل البيانات بنجاح',
+            'sort_field' => $sortField,
+            'sort_direction' => $sortDirection,
         ], 200);
     }
     

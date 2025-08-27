@@ -23,28 +23,65 @@
                 </div>
                 <div class="card-body">
                     <form action="{{ route('products.index') }}" method="GET" class="mb-4">
-                        <div class="input-group mb-2">
-                            <input type="text" class="form-control" name="search" 
-                                   placeholder="{{ __('messages.search_by_name_or_barcode_or_price') }}" 
-                                   value="{{ $search ?? '' }}">
-                            <select name="has_barcode" class="form-control ml-2">
-                                <option value="">{{ __('messages.all_products') }}</option>
-                                <option value="1" {{ request('has_barcode') == '1' ? 'selected' : '' }}>
-                                    {{ __('messages.with_barcode') }}
-                                </option>
-                                <option value="0" {{ request('has_barcode') == '0' ? 'selected' : '' }}>
-                                    {{ __('messages.without_barcode') }}
-                                </option>
-                            </select>
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="fas fa-search fa-sm"></i> {{ __('messages.search') }}
-                                </button>
-                                @if(isset($search) || isset($hasBarcode))
-                                    <a href="{{ route('products.index') }}" class="btn btn-secondary">
-                                        <i class="fas fa-times fa-sm"></i> {{ __('messages.clear') }}
-                                    </a>
-                                @endif
+                        <!-- Search Input Row -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" name="search" 
+                                       placeholder="{{ __('messages.search_by_name_or_barcode_or_price') }}" 
+                                       value="{{ $search ?? '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <select name="has_barcode" class="form-control">
+                                    <option value="">{{ __('messages.all_products') }}</option>
+                                    <option value="1" {{ request('has_barcode') == '1' ? 'selected' : '' }}>
+                                        {{ __('messages.with_barcode') }}
+                                    </option>
+                                    <option value="0" {{ request('has_barcode') == '0' ? 'selected' : '' }}>
+                                        {{ __('messages.without_barcode') }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Category Filter Row -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <select name="category_id" id="category_select" class="form-control">
+                                    <option value="">{{ __('messages.all_categories') }}</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}" 
+                                                {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                            {{ $category->category_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <select name="sub_category_id" id="subcategory_select" class="form-control">
+                                    <option value="">{{ __('messages.all_subcategories') }}</option>
+                                    @foreach($subCategories as $subCategory)
+                                        <option value="{{ $subCategory->id }}" 
+                                                {{ request('sub_category_id') == $subCategory->id ? 'selected' : '' }}>
+                                            {{ $subCategory->sub_category_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Search Button Row -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex">
+                                    <button class="btn btn-primary mr-2" type="submit">
+                                        <i class="fas fa-search fa-sm"></i> {{ __('messages.search') }}
+                                    </button>
+                                    @if(request()->hasAny(['search', 'has_barcode', 'category_id', 'sub_category_id']))
+                                        <a href="{{ route('products.index') }}" class="btn btn-secondary">
+                                            <i class="fas fa-times fa-sm"></i> {{ __('messages.clear') }}
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -90,9 +127,8 @@
                                                 </div>
                                             @endif
                                         </td>
-                                      <!-- In your table -->
-<td>{{ $product->english_name }}</td>
-<td>{{ $product->arabic_name }}</td>
+                                        <td>{{ $product->product_name }}</td>
+                                        <td>{{ $product->ar_product_name }}</td>
                                         <td>{{ $product->category->category_name ?? 'N/A' }}</td>
                                         <td>{{ $product->sub_category->sub_category_name ?? 'N/A' }}</td>
                                         <td>{{ $product->brand->brand_name ?? 'N/A' }}</td>
@@ -176,8 +212,36 @@
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // Remove DataTable initialization since we're using Laravel pagination
-            
+            // Handle category change to populate subcategories
+            $('#category_select').on('change', function() {
+                var categoryId = $(this).val();
+                var subcategorySelect = $('#subcategory_select');
+                
+                // Clear subcategory dropdown
+                subcategorySelect.html('<option value="">{{ __("messages.all_subcategories") }}</option>');
+                
+                if (categoryId) {
+                    // Show loading
+                    subcategorySelect.html('<option value="">Loading...</option>');
+                    
+                    // Fetch subcategories via AJAX
+                    $.ajax({
+                        url: '{{ route("get.subcategories", ":categoryId") }}'.replace(':categoryId', categoryId),
+                        type: 'GET',
+                        success: function(data) {
+                            subcategorySelect.html('<option value="">{{ __("messages.all_subcategories") }}</option>');
+                            $.each(data, function(index, subcategory) {
+                                subcategorySelect.append('<option value="' + subcategory.id + '">' + subcategory.sub_category_name + '</option>');
+                            });
+                        },
+                        error: function() {
+                            subcategorySelect.html('<option value="">{{ __("messages.all_subcategories") }}</option>');
+                            alert('Error loading subcategories');
+                        }
+                    });
+                }
+            });
+
             // Debounce function to prevent excessive AJAX calls
             function debounce(func, wait) {
                 let timeout;
